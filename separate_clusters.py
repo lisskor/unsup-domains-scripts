@@ -106,8 +106,7 @@ def restore_cluster_order(loc, input_files, cluster_mode_name,
                         tgt_clusterorder_fh.write(line.strip() + '\n')
 
 
-if __name__ == '__main__':
-    # Parse arguments
+def make_argument_parser():
     parser = ArgumentParser()
     parser.add_argument("--path_to_files", help="Path to input files location")
     parser.add_argument("--input_files", nargs='+',
@@ -131,7 +130,13 @@ if __name__ == '__main__':
                         help="With this flag, random cluster "
                              "numbers will be generated")
 
-    args = parser.parse_args()
+    return parser
+
+
+if __name__ == '__main__':
+    # Parse arguments
+    argument_parser = make_argument_parser()
+    args = argument_parser.parse_args()
 
     # with --random flag, make random indices,
     # otherwise use given indices
