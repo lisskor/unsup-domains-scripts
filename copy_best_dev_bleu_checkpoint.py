@@ -51,7 +51,6 @@ if __name__ == '__main__':
     args = parser.parse_args()
 
     if not os.path.isfile(args.modeldir + '/log.out'):
-        logging.info("File " + args.modeldir + '/log.out' +
-                     " does not exist, exiting")
+        logging.info(f"File {args.modeldir}/log.out does not exist, exiting")
     else:
         duplicate_best_checkpoint(model_path=args.modeldir)
