@@ -47,7 +47,7 @@ SAVE_DIR=da-sysclusters/experiments/${srclang}_${tgtlang}_${EXP_NAME}
   # grep "^T" $RESULTS_PATH/out_${srclang}_${tgtlang}_${EXP_NAME}_${corpus}.sys | cut -f2 > $RESULTS_PATH/tgt_${srclang}_${tgtlang}_${EXP_NAME}_${corpus}.txt
   
   # de-sentencepiece
-  python3 ../scripts/word-pieces.py --corpora $RESULTS_PATH/hyp_${srclang}_${tgtlang}_${EXP_NAME}_${corpus}.txt --model single-domain/preproc-models/fs-en-et --action restore
+  python3 ../scripts/apply_sentencepiece.py --corpora $RESULTS_PATH/hyp_${srclang}_${tgtlang}_${EXP_NAME}_${corpus}.txt --model single-domain/preproc-models/fs-en-et --action restore
   
   # calculate bleu w/sacrebleu
   echo $EXP_NAME

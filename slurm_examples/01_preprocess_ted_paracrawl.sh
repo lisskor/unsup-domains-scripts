@@ -34,10 +34,10 @@ echo "SentencePiece"
 
 # python3 $scriptspath/word-pieces.py --size 32000 --corpora $datapath/cl-*$srclang-$tgtlang*train.e* --model $modelspath/fs-en-et --action train
 
-# script word-pieces.py is included in this repo as well
+# script apply_sentencepiece.py is included in this repo as well
 
-python3 $scriptspath/word-pieces.py --corpora $datapath/cl-*$srclang-$tgtlang*$srclang --model $modelspath/fs-en-et --action split
-python3 $scriptspath/word-pieces.py --corpora $datapath/cl-*$srclang-$tgtlang*$tgtlang --model $modelspath/fs-en-et --action split
+python3 $scriptspath/apply_sentencepiece.py --corpora $datapath/cl-*$srclang-$tgtlang*$srclang --model $modelspath/fs-en-et --action split
+python3 $scriptspath/apply_sentencepiece.py --corpora $datapath/cl-*$srclang-$tgtlang*$tgtlang --model $modelspath/fs-en-et --action split
 
 # rename the files so that they only have sp- at the beginning and not the full model name
 for corpus in ParaCrawl TED

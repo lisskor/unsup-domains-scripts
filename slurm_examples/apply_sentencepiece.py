@@ -1,10 +1,7 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-# Authors: Liisa Rätsep, Lisa Korotkova
-
 import os
-import subprocess
 import logging
 import sentencepiece as spm
 from argparse import ArgumentParser
@@ -14,32 +11,22 @@ logging.basicConfig(format='%(asctime)s %(levelname)s: %(message)s',
 
 
 def train(arguments):
-    logging.info("Creating a training file")
-    # Create file with 10,000,000 random lines from the corpora
-    subprocess.call("cat " + ' '.join(
-        arguments.corpora) + "| shuf | head -n 10000000 > " + arguments.model + ".train",
-                    shell=True)
     logging.info("Starting training")
-    # Train the model
-    spm.SentencePieceTrainer.Train(
-        '--input=' + arguments.model + ".train --model_prefix=" + arguments.model + " --vocab_size=" + str(
-            arguments.size) + " --input_sentence_size=10000000")
-    # Remove training file
-    subprocess.call("rm " + arguments.model + ".train", shell=True)
+    spm.SentencePieceTrainer.train(
+        input=arguments.corpora,
+        model_prefix=arguments.model,
+        vocab_size=arguments.size)
 
 
 def split(arguments):
-    # Initialize SentencePiece processor
-    sp = spm.SentencePieceProcessor()
-
     # Load model
-    logging.info("Loading model")
-    sp.Load(arguments.model + ".model")
+    sp = spm.SentencePieceProcessor(model_file=arguments.model + ".model")
 
+    # Split each input file
     for corpus in arguments.corpora:
         logging.info("Splitting file {}".format(corpus))
         with open(corpus, 'r', encoding='utf8') as f:
-            sentences = f.readlines()
+            sentences = [line.strip() for line in f.readlines()]
         # Create output file name (add the model prefix)
         out_file = os.path.join(os.path.split(corpus)[0],
                                 os.path.split(arguments.model)[1] + '-' +
@@ -47,29 +34,25 @@ def split(arguments):
         with open(out_file, 'w', encoding='utf8') as f:
             # Process sentences
             for sentence in sentences:
-                pieces = sp.EncodeAsPieces(sentence)
+                pieces = sp.encode(sentence, out_type=str)
                 # Check result type, there might be unexpected behavior
                 if type(pieces[0]) == str:
-                    f.write(' '.join([x for x in sp.EncodeAsPieces(sentence)]))
-                    f.write('\n')
+                    f.write(' '.join([word for word
+                                      in sp.encode(sentence, out_type=str)]))
                 elif type(pieces[0]) == bytes:
-                    f.write(' '.join([x.decode('utf-8') for x
-                                      in sp.EncodeAsPieces(sentence)]))
-                    f.write('\n')
+                    f.write(' '.join([word.decode('utf-8') for word
+                                      in sp.encode(sentence, out_type=str)]))
+                f.write('\n')
 
 
 def restore(arguments):
-    # Initialize SentencePiece processor
-    sp = spm.SentencePieceProcessor()
-
     # Load model
-    logging.info("Loading model")
-    sp.Load(arguments.model + ".model")
+    sp = spm.SentencePieceProcessor(model_file=arguments.model + ".model")
 
     for corpus in arguments.corpora:
         logging.info("De-sp file {}".format(corpus))
         with open(corpus, 'r', encoding='utf-8') as f:
-            sentences = f.readlines()
+            sentences = [line.strip() for line in f.readlines()]
         # Create output file name (add the model prefix)
         out_file = os.path.join(os.path.split(corpus)[0],
                                 'de-' + os.path.split(arguments.model)[1] +
@@ -77,12 +60,12 @@ def restore(arguments):
         with open(out_file, 'w', encoding='utf8') as f:
             # Process sentences
             for sentence in sentences:
-                l = sp.DecodePieces(sentence.split())
+                glued_sentence = sp.decode(sentence.split())
                 # Check result type, there might be unexpected behavior
-                if type(l) == bytes:
-                    f.write(l.decode('utf-8'))
-                elif type(l) == str:
-                    f.write(l)
+                if type(glued_sentence) == str:
+                    f.write(glued_sentence)
+                elif type(glued_sentence) == bytes:
+                    f.write(glued_sentence.decode('utf-8'))
                 f.write('\n')
 
 
@@ -94,15 +77,15 @@ if __name__ == '__main__':
                         help="The type of action to be performed: 'train' "
                              "for training a new model, 'split' for splitting "
                              "text using an existing model, 'restore' for "
-                             "glueing wordpieces back into plain text")
+                             "glueing subwords back into plain text")
     parser.add_argument("--size", type=int, dest="size",
-                        default=32000, help="Number of wordpieces "
+                        default=32000, help="Vocabulary size "
                                             "(for training mode)")
     parser.add_argument("--corpora", dest="corpora", nargs="+",
                         help="File names of all files separated by spaces",
                         required=True)
     parser.add_argument("--model", dest="model",
-                        help="Wordpiece model file prefix or prefix "
+                        help="SentencePiece model file prefix or prefix "
                              "of an existing model", default="wordpieces")
 
     args = parser.parse_args()
